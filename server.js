@@ -19,8 +19,7 @@ var Storage = {
         return false;
       }
     }
-
-  }
+  },
 };
 
 var createStorage = function() {
@@ -62,7 +61,14 @@ app.delete('/items/:id', function(request, response) {
         });
     }
 });
-
+app.put('/items/:id', jsonParser, function(request, response) {
+    if (!('name' in request.body)) {
+        return response.sendStatus(400);
+    }
+    storage.remove(request.params.id);
+    storage.add(request.body.name);
+    response.status(200).json(request.body.name);
+});
 
 app.listen(process.env.PORT || 8080, process.env.IP);
 console.log("starting server on port 8080")
