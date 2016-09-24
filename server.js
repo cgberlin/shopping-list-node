@@ -1,5 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var _ = require('underscore');
 var jsonParser = bodyParser.json();
 
 var Storage = {
@@ -9,17 +10,24 @@ var Storage = {
     this.setId += 1;
     return item;
   },
-  remove: function(Id) {
-    for (var i = 0; i < this.items.length; i++){
-      if (this.items[i].id == Id){
-        this.items.splice(i, 1);
-        return true;
-      }
-      else {
-        return false;
-      }
-    }
+  isItemIdEqual: function (item, id) {
+    return item.id === id;
   },
+  remove: function(Id) {
+    this.items = _.filter(this.items, function (item) {
+      return !this.isItemIdEqual(item, Id);
+    }.bind(this));
+  },
+  existItem: function (Id) {
+    return _.any(this.items, function (item) {
+      return this.isItemIdEqual(item, Id);
+    }.bind(this));
+  },
+  findItemById: function (Id) {
+    return _.find(this.items, function (item) {
+      return this.existItem(item, Id);
+    }.bind(this));
+  }
 };
 
 var createStorage = function() {
@@ -51,11 +59,10 @@ app.post('/items', jsonParser, function(request, response) {
     response.status(201).json(item);
 });
 app.delete('/items/:id', function(request, response) {
-    var itemToRemove = storage.remove(request.params.id);
-    if (itemToRemove == true){
-        response.status(200);
-    }
-    else {
+    if (storage.existItem(parseInt(request.params.id, 10))) {
+        storage.remove(parseInt(request.params.id, 10));
+        response.status(200).json(storage.items);
+    } else {
         response.status(404).json( {
           error: 'whoops, not found'
         });
@@ -67,7 +74,7 @@ app.put('/items/:id', jsonParser, function(request, response) {
     }
     storage.remove(request.params.id);
     storage.add(request.body.name);
-    response.status(200).json(request.body.name);
+    response.status(200).json(storage.findItemById(request.params.id));
 });
 
 app.listen(process.env.PORT || 8080, process.env.IP);

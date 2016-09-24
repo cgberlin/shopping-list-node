@@ -60,7 +60,8 @@ describe('Shopping List', function() {
   it('should edit an item on PUT', function(done){
       chai.request(app)
           .put('/items/2')
-          .end(function(res){
+          .send({'name': 'Kale'})
+          .end(function(err, res){
             res.should.have.status(200);
             done();
           });
@@ -68,7 +69,7 @@ describe('Shopping List', function() {
   it('should delete an item on DELETE', function(done){
       chai.request(app)
           .delete('/items/2')
-          .end(function(res){
+          .end(function(err, res){
             res.should.have.status(200);
             done();
           });
